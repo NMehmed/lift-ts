@@ -46,7 +46,7 @@ describe('Lift', () => {
     ], 5)).to.be.deep.equal([0, 1, 2, 3, 4, 5, 0])
   })
 
-  it('should go up fully loaded', () => {
+  it('should go up fully loaded and respect capacity', () => {
     expect(makeARunWithElevator([
       [4, 4, 4, 4, 4, 4], // G
       [], // 1
@@ -56,5 +56,28 @@ describe('Lift', () => {
       [], // 5
       [], // 6
     ], 5)).to.be.deep.equal([0, 4, 0, 4, 0])
+  })
+
+  it('should go up and down, up and down', () => {
+    expect(makeARunWithElevator([
+      [], // G
+      [], // 1
+      [4, 4, 4, 4], // 2
+      [], // 3
+      [2, 2, 2, 2], // 4
+      [], // 5
+    ], 2)).to.be.deep.equal([0, 2, 4, 2, 4, 2, 0])
+  })
+
+  it('should go up and down smartly', () => {
+    expect(makeARunWithElevator([
+      [3, 3, 3, 3, 3, 3], //0
+      [], // 1
+      [], // 2
+      [], // 3
+      [], // 4
+      [4, 4, 4, 4, 4, 4], //5
+      [] //6
+    ], 5)).to.be.deep.equal([0, 3, 5, 4, 0, 3, 5, 4, 0])
   })
 })
