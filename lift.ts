@@ -17,11 +17,12 @@ export class Lift {
       this.history.push(this.currentFloor)
 
       this.getPeopleOff()
-      this.getPeopleIn()
 
       if (this.shouldChangeMainCourse()) {
         this.changeMainCourse()
       }
+
+      this.getPeopleIn()
 
       this.setNextStop()
     }
@@ -33,7 +34,7 @@ export class Lift {
 
   private getPeopleIn() {
     const queue = this.queues[this.currentFloor]
-    const passengers = queue.filter(x => this.isPassengersGoingUp ? x > this.currentFloor : x < this.currentFloor)
+    const passengers = queue.filter(x => this.isMainCourseUp ? x > this.currentFloor : x < this.currentFloor)
     const peopleWhoCanGetInCount = this.getFreeSpace() > passengers.length ? passengers.length : this.getFreeSpace()
 
     for (let i = 0; i < peopleWhoCanGetInCount; i++) {
@@ -49,14 +50,28 @@ export class Lift {
   }
 
   private shouldChangeMainCourse(): boolean {
-    return (this.peopleIn.length === 0 && !this.checkWaitingPeopleToGetOn()) ||
-      (this.peopleIn.length > 0 && this.isMainCourseUp && this.peopleIn[0] < this.currentFloor) ||
-      (this.peopleIn.length > 0 && !this.isMainCourseUp && this.peopleIn[0] > this.currentFloor)
-    // we should change course also after picking passenger on highest floor who wants to go down
-    // and when we pick passenger on lowest floor who wants to go up
+    return (this.peopleIn.length === 0 && !this.checkWaitingPeopleToGetOn())
   }
 
   private changeMainCourse() {
+    if (this.isMainCourseUp) {
+      if (this.checkWaitingPeopleToGetOn(true, false)) {
+        this.isMainCourseUp = true
+        this.isPassengersGoingUp = false
+
+        return
+      }
+    }
+
+    if (!this.isMainCourseUp) {
+      if (this.checkWaitingPeopleToGetOn(false, true)) {
+        this.isMainCourseUp = false
+        this.isPassengersGoingUp = true
+
+        return
+      }
+    }
+
     // go up and collect people who wants to go up
     if (this.checkWaitingPeopleToGetOn(true, true)) {
       this.isMainCourseUp = true
@@ -135,11 +150,11 @@ export class Lift {
     const floorsWithwaitingPeople = []
 
     if (this.isMainCourseUp) {
-      for (var i = this.currentFloor + 1; i < this.queues.length; i++) {
+      for (let i = this.currentFloor + 1; i < this.queues.length; i++) {
         if (this.queues[i].some(x => this.isPassengersGoingUp ? x > i : x < i)) floorsWithwaitingPeople.push(i)
       }
     } else {
-      for (var i = this.currentFloor - 1; i > 0; i--) {
+      for (let i = this.currentFloor - 1; i > 0; i--) {
         if (this.queues[i].some(x => this.isPassengersGoingUp ? x > i : x < i)) floorsWithwaitingPeople.push(i)
       }
     }
@@ -155,7 +170,9 @@ export class Lift {
     let isThereSomeOneWaiting = false
 
     if (isCourseUp) {
-      for (let floor = this.currentFloor; floor < this.queues.length; floor++) {
+      const floorToStart = isPassengersGoingUp ? this.currentFloor : this.currentFloor + 1
+
+      for (let floor = floorToStart; floor < this.queues.length; floor++) {
         const queue = this.queues[floor]
 
         if (queue.some(p => isPassengersGoingUp ? p > floor : p < floor)) {
@@ -164,7 +181,9 @@ export class Lift {
         }
       }
     } else {
-      for (let floor = this.currentFloor; floor > -1; floor--) {
+      const floorToStart = !isPassengersGoingUp ? this.currentFloor : this.currentFloor - 1
+
+      for (let floor = floorToStart; floor > -1; floor--) {
         const queue = this.queues[floor]
 
         if (queue.some(p => isPassengersGoingUp ? p > floor : p < floor)) {
