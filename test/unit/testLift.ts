@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { Lift } from '../../lift'
+import { Lift } from '../../src/lift'
 
 describe('Lift', () => {
   const makeARunWithElevator = (queues: Array<Array<number>>, capacity: number): Array<number> => {

@@ -72,25 +72,12 @@ export class Lift {
       }
     }
 
-    // go up and collect people who wants to go up
     if (this.checkWaitingPeopleToGetOn(true, true)) {
       this.isMainCourseUp = true
       this.isPassengersGoingUp = true
-
-      // go up and collect people who wants to go down
-    } else if (this.checkWaitingPeopleToGetOn(true, false)) {
-      this.isMainCourseUp = true
-      this.isPassengersGoingUp = false
-
-      // go down and collect people who wants to go down
-    } else if (this.checkWaitingPeopleToGetOn(false, false)) {
+    }  else if (this.checkWaitingPeopleToGetOn(false, false)) {
       this.isMainCourseUp = false
       this.isPassengersGoingUp = false
-
-      // go down and collect people who wants to go up
-    } else if (this.checkWaitingPeopleToGetOn(false, true)) {
-      this.isMainCourseUp = false
-      this.isPassengersGoingUp = true
     }
   }
 
