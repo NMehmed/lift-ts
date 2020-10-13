@@ -12,15 +12,13 @@ export class Lift {
     this.capacity = capacity
   }
 
-  public start() {
+  public makeARun() {
     while (this.queues.some(queue => queue.length > 0) || this.peopleIn.length > 0) {
       this.history.push(this.currentFloor)
 
       this.getPeopleOff()
 
-      if (this.shouldChangeMainCourse()) {
-        this.changeMainCourse()
-      }
+      if (this.shouldChangeMainCourse()) this.changeMainCourse()
 
       this.getPeopleIn()
 
@@ -32,21 +30,20 @@ export class Lift {
     return this.history
   }
 
+  private getPeopleOff() {
+    this.peopleIn = this.peopleIn.filter(passenger => passenger !== this.currentFloor)
+  }
+
   private getPeopleIn() {
     const queue = this.queues[this.currentFloor]
-    const passengers = queue.filter(x => this.isMainCourseUp ? x > this.currentFloor : x < this.currentFloor)
+    const passengers = queue.filter(passengerAimedFloor => this.passengersGoingOnThatDirection(passengerAimedFloor, this.isMainCourseUp, this.currentFloor))
     const peopleWhoCanGetInCount = this.getFreeSpace() > passengers.length ? passengers.length : this.getFreeSpace()
 
     for (let i = 0; i < peopleWhoCanGetInCount; i++) {
-      this.peopleIn.push(passengers[i])
-      queue.splice(queue.indexOf(passengers[i]), 1)
+      this.peopleIn.push(queue.shift() as number)
     }
 
     this.peopleIn.sort((a, b) => a - b)
-  }
-
-  private getPeopleOff() {
-    this.peopleIn = this.peopleIn.filter(x => x !== this.currentFloor)
   }
 
   private shouldChangeMainCourse(): boolean {
@@ -75,7 +72,7 @@ export class Lift {
     if (this.checkWaitingPeopleToGetOn(true, true)) {
       this.isMainCourseUp = true
       this.isPassengersGoingUp = true
-    }  else if (this.checkWaitingPeopleToGetOn(false, false)) {
+    } else if (this.checkWaitingPeopleToGetOn(false, false)) {
       this.isMainCourseUp = false
       this.isPassengersGoingUp = false
     }
@@ -137,12 +134,14 @@ export class Lift {
     const floorsWithwaitingPeople = []
 
     if (this.isMainCourseUp) {
-      for (let i = this.currentFloor + 1; i < this.queues.length; i++) {
-        if (this.queues[i].some(x => this.isPassengersGoingUp ? x > i : x < i)) floorsWithwaitingPeople.push(i)
+      for (let floor = this.currentFloor + 1; floor < this.queues.length; floor++) {
+        if (this.anyPassengersOnThatDirection(this.queues[floor], this.isPassengersGoingUp, floor))
+          floorsWithwaitingPeople.push(floor)
       }
     } else {
-      for (let i = this.currentFloor - 1; i > 0; i--) {
-        if (this.queues[i].some(x => this.isPassengersGoingUp ? x > i : x < i)) floorsWithwaitingPeople.push(i)
+      for (let floor = this.currentFloor - 1; floor > 0; floor--) {
+        if (this.anyPassengersOnThatDirection(this.queues[floor], this.isPassengersGoingUp, floor))
+          floorsWithwaitingPeople.push(floor)
       }
     }
 
@@ -162,7 +161,7 @@ export class Lift {
       for (let floor = floorToStart; floor < this.queues.length; floor++) {
         const queue = this.queues[floor]
 
-        if (queue.some(p => isPassengersGoingUp ? p > floor : p < floor)) {
+        if (this.anyPassengersOnThatDirection(queue, isPassengersGoingUp, floor)) {
           isThereSomeOneWaiting = true
           break
         }
@@ -173,7 +172,7 @@ export class Lift {
       for (let floor = floorToStart; floor > -1; floor--) {
         const queue = this.queues[floor]
 
-        if (queue.some(p => isPassengersGoingUp ? p > floor : p < floor)) {
+        if (this.anyPassengersOnThatDirection(queue, isPassengersGoingUp, floor)) {
           isThereSomeOneWaiting = true
           break
         }
@@ -181,5 +180,13 @@ export class Lift {
     }
 
     return isThereSomeOneWaiting
+  }
+
+  private anyPassengersOnThatDirection(queue: Array<number>, isDirectionUp: boolean, currentFloor: number): boolean {
+    return queue.some(passengerAimedfloor => this.passengersGoingOnThatDirection(passengerAimedfloor, isDirectionUp, currentFloor))
+  }
+
+  private passengersGoingOnThatDirection(passengerAimedfloor: number, isDirectionUp: boolean, currentFloor: number) {
+    return isDirectionUp ? passengerAimedfloor > currentFloor : passengerAimedfloor < currentFloor
   }
 }

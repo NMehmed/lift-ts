@@ -5,7 +5,7 @@ describe('Lift', () => {
   const makeARunWithElevator = (queues: Array<Array<number>>, capacity: number): Array<number> => {
     const lift = new Lift(queues, capacity)
 
-    lift.start()
+    lift.makeARun()
 
     return lift.history
   }

@@ -11,13 +11,12 @@ class Lift {
         this.queues = queues;
         this.capacity = capacity;
     }
-    start() {
+    makeARun() {
         while (this.queues.some(queue => queue.length > 0) || this.peopleIn.length > 0) {
             this.history.push(this.currentFloor);
             this.getPeopleOff();
-            if (this.shouldChangeMainCourse()) {
+            if (this.shouldChangeMainCourse())
                 this.changeMainCourse();
-            }
             this.getPeopleIn();
             this.setNextStop();
         }
@@ -25,18 +24,17 @@ class Lift {
             this.history.push(0);
         return this.history;
     }
+    getPeopleOff() {
+        this.peopleIn = this.peopleIn.filter(passenger => passenger !== this.currentFloor);
+    }
     getPeopleIn() {
         const queue = this.queues[this.currentFloor];
-        const passengers = queue.filter(x => this.isMainCourseUp ? x > this.currentFloor : x < this.currentFloor);
+        const passengers = queue.filter(passengerAimedFloor => this.passengersGoingOnThatDirection(passengerAimedFloor, this.isMainCourseUp, this.currentFloor));
         const peopleWhoCanGetInCount = this.getFreeSpace() > passengers.length ? passengers.length : this.getFreeSpace();
         for (let i = 0; i < peopleWhoCanGetInCount; i++) {
-            this.peopleIn.push(passengers[i]);
-            queue.splice(queue.indexOf(passengers[i]), 1);
+            this.peopleIn.push(queue.shift());
         }
         this.peopleIn.sort((a, b) => a - b);
-    }
-    getPeopleOff() {
-        this.peopleIn = this.peopleIn.filter(x => x !== this.currentFloor);
     }
     shouldChangeMainCourse() {
         return (this.peopleIn.length === 0 && !this.checkWaitingPeopleToGetOn());
@@ -121,15 +119,15 @@ class Lift {
     getFloorsWhoWaitsToGetIn() {
         const floorsWithwaitingPeople = [];
         if (this.isMainCourseUp) {
-            for (let i = this.currentFloor + 1; i < this.queues.length; i++) {
-                if (this.queues[i].some(x => this.isPassengersGoingUp ? x > i : x < i))
-                    floorsWithwaitingPeople.push(i);
+            for (let floor = this.currentFloor + 1; floor < this.queues.length; floor++) {
+                if (this.anyPassengersOnThatDirection(this.queues[floor], this.isPassengersGoingUp, floor))
+                    floorsWithwaitingPeople.push(floor);
             }
         }
         else {
-            for (let i = this.currentFloor - 1; i > 0; i--) {
-                if (this.queues[i].some(x => this.isPassengersGoingUp ? x > i : x < i))
-                    floorsWithwaitingPeople.push(i);
+            for (let floor = this.currentFloor - 1; floor > 0; floor--) {
+                if (this.anyPassengersOnThatDirection(this.queues[floor], this.isPassengersGoingUp, floor))
+                    floorsWithwaitingPeople.push(floor);
             }
         }
         return floorsWithwaitingPeople;
@@ -143,7 +141,7 @@ class Lift {
             const floorToStart = isPassengersGoingUp ? this.currentFloor : this.currentFloor + 1;
             for (let floor = floorToStart; floor < this.queues.length; floor++) {
                 const queue = this.queues[floor];
-                if (queue.some(p => isPassengersGoingUp ? p > floor : p < floor)) {
+                if (this.anyPassengersOnThatDirection(queue, isPassengersGoingUp, floor)) {
                     isThereSomeOneWaiting = true;
                     break;
                 }
@@ -153,13 +151,19 @@ class Lift {
             const floorToStart = !isPassengersGoingUp ? this.currentFloor : this.currentFloor - 1;
             for (let floor = floorToStart; floor > -1; floor--) {
                 const queue = this.queues[floor];
-                if (queue.some(p => isPassengersGoingUp ? p > floor : p < floor)) {
+                if (this.anyPassengersOnThatDirection(queue, isPassengersGoingUp, floor)) {
                     isThereSomeOneWaiting = true;
                     break;
                 }
             }
         }
         return isThereSomeOneWaiting;
+    }
+    anyPassengersOnThatDirection(queue, isDirectionUp, currentFloor) {
+        return queue.some(passengerAimedfloor => this.passengersGoingOnThatDirection(passengerAimedfloor, isDirectionUp, currentFloor));
+    }
+    passengersGoingOnThatDirection(passengerAimedfloor, isDirectionUp, currentFloor) {
+        return isDirectionUp ? passengerAimedfloor > currentFloor : passengerAimedfloor < currentFloor;
     }
 }
 exports.Lift = Lift;

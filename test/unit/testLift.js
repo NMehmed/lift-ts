@@ -5,7 +5,7 @@ const lift_1 = require("../../src/lift");
 describe('Lift', () => {
     const makeARunWithElevator = (queues, capacity) => {
         const lift = new lift_1.Lift(queues, capacity);
-        lift.start();
+        lift.makeARun();
         return lift.history;
     };
     it('should simple go up', () => {
